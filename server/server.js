@@ -35,7 +35,7 @@ app.use(bodyParser.json());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/product", productRoutes);
-app.use("/", "lizas collection");
+// app.use("/", "lizas collection");
 
 //rest api
 // app.use("*", function (req, res) {
