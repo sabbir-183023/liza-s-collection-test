@@ -1,44 +1,92 @@
 import { comparePassword, hashPassword } from "../helpers/authHelper.js";
+import { sendOtpToEmail, sendStatusToEmail } from "../helpers/emailUtils.js"; // Import the utility function
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
 import JWT from "jsonwebtoken";
 
-//Register function
+// Endpoint to send OTP
+export const sendOtpController = async (req, res) => {
+  const { email } = req.body;
+  try {
+    // Check if the user already exists
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).send({
+        success: false,
+        message: "User already exists, Please login",
+      });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000); // Generate a random OTP
+
+    // Send OTP to the user's email
+    await sendOtpToEmail(email, otp);
+
+    // Store OTP temporarily in memory (this can be replaced with Redis or a database)
+    global.otpCache = global.otpCache || {};
+    global.otpCache[email] = otp;
+
+    res.send({ success: true, message: "OTP sent to your email!" });
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    res.status(500).send({ success: false, message: "Failed to send OTP." });
+  }
+};
+
+// Endpoint to verify OTP
+export const verifyOtpController = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    if (global.otpCache[email] === parseInt(otp)) {
+      return res.send({ success: true, message: "OTP verified successfully!" });
+    } else {
+      return res.send({ success: false, message: "Invalid OTP." });
+    }
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    res.status(500).send({ success: false, message: "Error verifying OTP." });
+  }
+};
+
+//registration
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, phone, address, answer } = req.body;
-    //validation
+    const { name, email, password, phone, address, answer, otp } = req.body;
+
+    // Validation
     if (!name) {
-      return res.send({ message: "Name is required" });
+      return res.status(400).send({ message: "Name is required" });
     }
     if (!email) {
-      return res.send({ message: "Email is required" });
+      return res.status(400).send({ message: "Email is required" });
     }
     if (!password) {
-      return res.send({ message: "Password is required" });
+      return res.status(400).send({ message: "Password is required" });
     }
     if (!phone) {
-      return res.send({ message: "Phone Number is required" });
+      return res.status(400).send({ message: "Phone Number is required" });
     }
     if (!address) {
-      return res.send({ message: "Address is required" });
+      return res.status(400).send({ message: "Address is required" });
     }
     if (!answer) {
-      return res.send({ message: "Answer is required" });
+      return res.status(400).send({ message: "Answer is required" });
     }
-    //check user
-    const existingUser = await userModel.findOne({ email });
-    //existing user
-    if (existingUser) {
-      return res.status(200).send({
+    if (!otp) {
+      return res.status(400).send({ message: "OTP is required" });
+    }
+
+    // Check if OTP is verified
+    if (!global.otpCache || global.otpCache[email] !== parseInt(otp)) {
+      return res.status(400).send({
         success: false,
-        message: "User already exist, Please login",
+        message: "Invalid or unverified OTP.",
       });
     }
 
-    //register user
+    // Hash the password
     const hashedPassword = await hashPassword(password);
-    //save
+
+    // Save the user
     const user = await new userModel({
       name,
       email,
@@ -48,13 +96,16 @@ export const registerController = async (req, res) => {
       password: hashedPassword,
     }).save();
 
+    // Clear OTP cache for the user after successful registration
+    delete global.otpCache[email];
+
     res.status(201).send({
       success: true,
       message: "User Registration Successful!",
       user,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).send({
       success: false,
       message: "Error in Registration",
@@ -213,8 +264,8 @@ export const getOrdersController = async (req, res) => {
   try {
     const orders = await orderModel
       .find({ buyer: req.user._id })
-      .populate("products")
-      .populate("buyer", "name");
+      .populate("buyer", "name")
+      .sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.log(error);
@@ -231,7 +282,6 @@ export const getAllOrdersController = async (req, res) => {
   try {
     const orders = await orderModel
       .find({})
-      .populate("products")
       .populate("buyer", "name")
       .sort({ createdAt: -1 });
     res.json(orders);
@@ -250,11 +300,17 @@ export const orderStatusController = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
+    const order = await orderModel.findById(orderId).populate("buyer");
+    const name = order?.buyer?.name;
+    const email = order?.buyer?.email;
     const orders = await orderModel.findByIdAndUpdate(
       orderId,
       { status },
       { new: true }
     );
+    console.log(email);
+    //send order status email
+    await sendStatusToEmail(email, orderId, name, status);
     res.json(orders);
   } catch (error) {
     console.log(error);

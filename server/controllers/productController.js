@@ -6,6 +6,8 @@ import slugify from "slugify";
 import dotenv from "dotenv";
 import braintree from "braintree";
 import fs from "fs";
+import { sendOrderCorfirmationToEmail } from "../helpers/emailUtils.js";
+import userModel from "../models/userModel.js";
 
 dotenv.config();
 
@@ -461,6 +463,11 @@ export const braintreePaymentController = async (req, res) => {
         }
       }
     );
+    const buyerId = req.user._id
+    const user = await userModel.findById(buyerId)
+    const name = user.name
+    const email = user.email
+    await sendOrderCorfirmationToEmail(email, name)
   } catch (error) {
     console.log(error);
     res.status(400).send({

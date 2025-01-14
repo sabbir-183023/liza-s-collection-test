@@ -9,6 +9,8 @@ import {
   getOrdersController,
   getAllOrdersController,
   orderStatusController,
+  sendOtpController,
+  verifyOtpController
 } from "../controllers/authController.js";
 import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
 
@@ -19,6 +21,12 @@ const router = express.Router();
 //routing
 //Register
 router.post("/register", registerController);
+
+// Route to send OTP
+router.post('/send-otp', sendOtpController);
+
+// Route to verify OTP
+router.post('/verify-otp', verifyOtpController);
 
 //login
 router.post("/login", loginController);
