@@ -14,6 +14,7 @@ import {
   braintreeTokenController,
   braintreePaymentController,
   getSingleProductControllerById,
+  codController,
 } from "../controllers/productController.js";
 import multer from "multer";
 import { isAdmin, requireSignIn } from "../middlewares/authMiddleware.js";
@@ -88,5 +89,8 @@ router.get("/braintree/token", braintreeTokenController);
 
 //payment
 router.post("/braintree/payment", requireSignIn, braintreePaymentController);
+
+//COD Order
+router.post("/cod", requireSignIn, codController);
 
 export default router;

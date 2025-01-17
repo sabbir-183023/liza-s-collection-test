@@ -209,7 +209,7 @@ export const sendOrderCorfirmationToEmail = async (email, name) => {
     // Mail options
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email
-      to: email, // Recipient's email
+      to: [email, "sabbir183023@yahoo.com"], // Recipient's email
       subject: `Order Received - Liza's Collection`,
       html: emailContent, // HTML email content
     };

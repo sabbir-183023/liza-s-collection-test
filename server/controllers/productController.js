@@ -463,16 +463,70 @@ export const braintreePaymentController = async (req, res) => {
         }
       }
     );
-    const buyerId = req.user._id
-    const user = await userModel.findById(buyerId)
-    const name = user.name
-    const email = user.email
-    await sendOrderCorfirmationToEmail(email, name)
+
+    // Update product quantities
+    for (const item of cart) {
+      await productModel.findByIdAndUpdate(
+        item._id,
+        { $inc: { quantity: -item.amount } }, // Reduce quantity by the purchased amount
+        { new: true }
+      );
+    }
+
+    const buyerId = req.user._id;
+    const user = await userModel.findById(buyerId);
+    const name = user.name;
+    const email = user.email;
+    await sendOrderCorfirmationToEmail(email, name);
   } catch (error) {
     console.log(error);
     res.status(400).send({
       success: false,
       message: "Error in payment",
+      error,
+    });
+  }
+};
+
+//COD Delivery
+export const codController = async (req, res) => {
+  try {
+    const { cart } = req.body;
+    let total = 0;
+    cart.map((item) => {
+      total = total + item.price * item.amount;
+    });
+
+    const order = new orderModel({
+      products: cart,
+      payment: "cod",
+      buyer: req.user._id,
+    }).save();
+
+    // Update product quantities
+    for (const item of cart) {
+      await productModel.findByIdAndUpdate(
+        item._id,
+        { $inc: { quantity: -item.amount } }, // Reduce quantity by the purchased amount
+        { new: true }
+      );
+    }
+
+    const buyerId = req.user._id;
+    const user = await userModel.findById(buyerId);
+    const name = user.name;
+    const email = user.email;
+    await sendOrderCorfirmationToEmail(email, name);
+    res.status(200).send({
+      success: true,
+      message: "Cash On Delivery Order Successful",
+      order,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "Error in COD order",
       error,
     });
   }
