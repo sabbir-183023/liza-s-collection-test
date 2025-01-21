@@ -531,3 +531,48 @@ export const codController = async (req, res) => {
     });
   }
 };
+
+//most sold products
+export const mostSoldProductsController = async (req, res) => {
+  try {
+    // Step 1: Aggregate orders to calculate total quantity sold for each product
+    const topProducts = await orderModel.aggregate([
+      { $unwind: "$products" }, // Decompose the products array
+      {
+        $group: {
+          _id: "$products._id", // Group by product _id
+          totalQuantity: { $sum: "$products.quantity" }, // Sum up the quantity
+        },
+      },
+      { $sort: { totalQuantity: -1 } }, // Sort by totalQuantity in descending order
+      { $limit: 8 }, // Limit to top 10 products
+    ]);
+
+    // Step 2: Extract product IDs
+    const productIds = topProducts.map((product) => product._id);
+
+    // Step 3: Fetch product details from productModel
+    const products = await productModel.find({ _id: { $in: productIds } });
+
+    // Step 4: Map products with their totalQuantity and sort them
+    const topSoldProducts = products
+      .map((product) => {
+        const quantityInfo = topProducts.find(
+          (item) => item._id.toString() === product._id.toString()
+        );
+        return {
+          ...product.toObject(),
+          totalQuantity: quantityInfo?.totalQuantity || 0, // Add totalQuantity property
+        };
+      })
+      .sort((a, b) => b.totalQuantity - a.totalQuantity); // Sort by totalQuantity in descending order
+
+    res.status(200).send({
+      success: true,
+      topSoldProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching top sold products:", error);
+    res.status(500).json({ error: "Failed to fetch top sold products" });
+  }
+};
