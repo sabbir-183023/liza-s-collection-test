@@ -2,6 +2,7 @@ import { comparePassword, hashPassword } from "../helpers/authHelper.js";
 import { sendOtpToEmail, sendStatusToEmail } from "../helpers/emailUtils.js"; // Import the utility function
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
+import productModel from "../models/productModel.js";
 import JWT from "jsonwebtoken";
 
 // Endpoint to send OTP
@@ -308,15 +309,103 @@ export const orderStatusController = async (req, res) => {
       { status },
       { new: true }
     );
-    console.log(email);
+    console.log(status);
     //send order status email
-    await sendStatusToEmail(email, orderId, name, status);
+    if (status === "Delivered") {
+      await sendStatusToEmail(email, orderId, name, status);
+    }
     res.json(orders);
   } catch (error) {
     console.log(error);
     res.status(400).send({
       success: false,
       message: "error in updating status",
+      error,
+    });
+  }
+};
+
+//add to wishlist
+export const addToWishlist = async (req, res) => {
+  const { userId } = req.params;
+  const { productId } = req.body;
+
+  try {
+    const user = await userModel.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.wishList.includes(productId)) {
+      user.wishList.push(productId);
+      await user.save();
+      return res.status(200).send({
+        success: true,
+        message: "Product added to wishlist",
+        wishList: user.wishList,
+      });
+    } else {
+      return res.status(400).send({
+        success: false,
+        message: "Product already in wishlist",
+      });
+    }
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Server error",
+      error,
+    });
+  }
+};
+
+// remove from wishList
+export const removeFromWishlist = async (req, res) => {
+  const { userId } = req.params;
+  const { productId } = req.body;
+
+  try {
+    const user = await userModel.findById(userId);
+    if (!user)
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+
+    user.wishList = user.wishList.filter((id) => id.toString() !== productId);
+    await user.save();
+    return res.status(200).send({
+      success: true,
+      message: "Product removed from wishlist",
+      wishList: user.wishList,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Server error",
+      error,
+    });
+  }
+};
+
+// get wishList
+export const getWishlist = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await userModel.findById(userId).populate("wishList");
+    if (!user)
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+
+    return res.status(200).send({
+      success: true,
+      wishList: user.wishList,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Server error",
       error,
     });
   }

@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoute.js";
 import categoryRoutes from "./routes/categoryRoute.js";
 import productRoutes from "./routes/productRoute.js";
 import homepageSlideRoutes from "./routes/homePageSlideRoute.js";
+import reviewRoute from "./routes/reviewRoute.js";
 import cors from "cors";
 import bodyParser from "body-parser";
 
@@ -31,6 +32,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/slide", homepageSlideRoutes);
+app.use("/api/v1/review", reviewRoute);
 
 //rest api
 app.get("/", (req, res) => {

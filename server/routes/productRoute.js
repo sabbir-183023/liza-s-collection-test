@@ -16,6 +16,10 @@ import {
   getSingleProductControllerById,
   codController,
   mostSoldProductsController,
+  getPhotosController,
+  uploadSinglePhotoController,
+  removePhotoController,
+  getProductsWithOriginalPrice
 } from "../controllers/productController.js";
 import multer from "multer";
 import { isAdmin, requireSignIn } from "../middlewares/authMiddleware.js";
@@ -41,7 +45,7 @@ router.post(
   "/create-product",
   requireSignIn,
   isAdmin,
-  upload.single("photo"),
+  upload.array("photos", 10), // Allow up to 10 photos
   createProductController
 );
 
@@ -50,9 +54,23 @@ router.put(
   "/edit-product/:id",
   requireSignIn,
   isAdmin,
-  upload.single("photo"),
   editProductController
 );
+
+//getPhotos
+router.get("/get-photos/:id", requireSignIn, isAdmin, getPhotosController)
+
+// Single photo upload and save to product route
+router.post(
+  "/upload-photo/:productId",
+  requireSignIn,
+  isAdmin,
+  upload.single("photo"), // Accept only a single photo
+  uploadSinglePhotoController
+);
+
+// delete a photo
+router.delete("/remove-photo/:productId",requireSignIn,isAdmin, removePhotoController)
 
 //get products
 router.get("/get-product", getProductController);
@@ -96,5 +114,8 @@ router.post("/cod", requireSignIn, codController);
 
 //Most Sold Products
 router.get("/most-sold-products", mostSoldProductsController);
+
+//Discounted Products
+router.get("/discounted-products", getProductsWithOriginalPrice);
 
 export default router;

@@ -19,7 +19,7 @@ export const sendOtpToEmail = async (email, otp) => {
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email
       to: email, // Recipient's email
-      subject: "Registration at Liza's Collection",
+      subject: "Registration at LiZ Fashions",
       text: ` Your OTP for registering with us is: ${otp}`, // The OTP content of the email
     };
 
@@ -50,7 +50,7 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Status Update</title>
+        <title>Order Delivered</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -78,6 +78,13 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
             margin: 20px 0;
             border-radius: 8px;
           }
+          .order-details a button{
+            border:none;
+            background:blue;
+            border-radius:8px;
+            color:white;
+            padding:5px;
+          }
           .order-id {
             font-weight: bold;
           }
@@ -95,16 +102,18 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
       </head>
       <body>
         <div class="email-container">
-          <h1>Order Status Update</h1>
+          <h1>Product Delivered</h1>
           <p>Hello ${name},</p>
-          <p>We wanted to let you know that your order #LC${orderId} at Liza's Collection has been updated. Here's the latest status:</p>
+          <p>We wanted to let you know that your order #LF${orderId} at LiZ Fashions has been ${status}</p>
           <div class="order-details">
             <p class="order-id">Order ID: #LC${orderId}</p>
             <p>Status: <span class="status">${status}</span></p>
+            <p>Feel free to give the product a review so that others can purchase easily</p>
+            <a href="https://lizfashions.freewebhostmost.com/"><button>Click here review</button></a>
           </div>
           <p>Thank you for shopping with us! If you have any questions, feel free to contact us.</p>
           <div class="footer">
-            <p>&copy; 2025 Liza's Collection. All rights reserved.</p>
+            <p>&copy; 2025 LiZ Fashions. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -115,7 +124,7 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email
       to: email, // Recipient's email
-      subject: `Update on your order #LC${orderId} at Liza's Collection`,
+      subject: `Update on your order #LC${orderId} at LiZ Fashions`,
       html: emailContent, // HTML email content
     };
     // Send the email
@@ -192,14 +201,14 @@ export const sendOrderCorfirmationToEmail = async (email, name) => {
         <div class="email-container">
           <h1>Order Received</h1>
           <p>Hello ${name},</p>
-          <p>We wanted to thank you for ordering at Liza's Collection. We have received your order.</p>
+          <p>We wanted to thank you for ordering at LiZ Fashions. We have received your order.</p>
           <div class="order-details">
             <p class="order-id"></p>
             <p><span class="status">We are processing your order.</span></p>
           </div>
           <p>Thank you for shopping with us! If you have any questions, feel free to contact us.</p>
           <div class="footer">
-            <p>&copy; 2025 Liza's Collection. All rights reserved.</p>
+            <p>&copy; 2025 LiZ Fashions. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -210,7 +219,7 @@ export const sendOrderCorfirmationToEmail = async (email, name) => {
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email
       to: [email, "sabbir183023@yahoo.com"], // Recipient's email
-      subject: `Order Received - Liza's Collection`,
+      subject: `Order Received - LiZ Fashions`,
       html: emailContent, // HTML email content
     };
     // Send the email

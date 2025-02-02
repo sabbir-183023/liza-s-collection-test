@@ -10,7 +10,10 @@ import {
   getAllOrdersController,
   orderStatusController,
   sendOtpController,
-  verifyOtpController
+  verifyOtpController,
+  getWishlist,
+  removeFromWishlist,
+  addToWishlist,
 } from "../controllers/authController.js";
 import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
 
@@ -23,10 +26,10 @@ const router = express.Router();
 router.post("/register", registerController);
 
 // Route to send OTP
-router.post('/send-otp', sendOtpController);
+router.post("/send-otp", sendOtpController);
 
 // Route to verify OTP
-router.post('/verify-otp', verifyOtpController);
+router.post("/verify-otp", verifyOtpController);
 
 //login
 router.post("/login", loginController);
@@ -65,5 +68,14 @@ router.put(
   isAdmin,
   orderStatusController
 );
+
+// Add to wishlist
+router.post("/:userId/wishlist", addToWishlist);
+
+// Remove from wishlist
+router.delete("/:userId/wishlist", removeFromWishlist);
+
+// Get wishlist
+router.get("/:userId/wishlist", getWishlist);
 
 export default router;
