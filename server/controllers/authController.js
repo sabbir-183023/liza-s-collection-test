@@ -51,7 +51,7 @@ export const verifyOtpController = async (req, res) => {
 //registration
 export const registerController = async (req, res) => {
   try {
-    const { name, email, password, phone, address, answer, otp } = req.body;
+    const { name, email, password, phone, otp } = req.body;
 
     // Validation
     if (!name) {
@@ -65,12 +65,6 @@ export const registerController = async (req, res) => {
     }
     if (!phone) {
       return res.status(400).send({ message: "Phone Number is required" });
-    }
-    if (!address) {
-      return res.status(400).send({ message: "Address is required" });
-    }
-    if (!answer) {
-      return res.status(400).send({ message: "Answer is required" });
     }
     if (!otp) {
       return res.status(400).send({ message: "OTP is required" });
@@ -92,8 +86,6 @@ export const registerController = async (req, res) => {
       name,
       email,
       phone,
-      address,
-      answer,
       password: hashedPassword,
     }).save();
 
@@ -154,6 +146,8 @@ export const loginController = async (req, res) => {
         email: user.email,
         phone: user.phone,
         address: user.address,
+        district: user.district,
+        country: user.country,
         role: user.role,
       },
       token,
@@ -168,40 +162,145 @@ export const loginController = async (req, res) => {
   }
 };
 
-//forgot password controller
-export const forgotPasswordController = async (req, res) => {
+//Change Password
+export const changePasswordController = async (req, res) => {
   try {
-    const { email, answer, newPassword } = req.body;
-    if (!email) {
-      res.status(400).send({ message: "Email is required" });
-    }
-    if (!answer) {
-      res.status(400).send({ message: "Answer is required" });
-    }
-    if (!newPassword) {
-      res.status(400).send({ message: "New Password is required" });
-    }
-    //check
-    const user = await userModel.findOne({ email, answer });
-    //validation
-    if (!user) {
-      return res.status(403).send({
+    const { email, oldPassword, newPassword } = req.body;
+
+    // Validation
+    if (!email || !oldPassword || !newPassword) {
+      return res.status(400).send({
         success: false,
-        message: "Wrong Email Or Answer",
+        message: "All fields are required",
       });
     }
-    const hashed = await hashPassword(newPassword);
-    await userModel.findByIdAndUpdate(user._id, { password: hashed });
+
+    // Find user
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if old password matches
+    const isMatch = await comparePassword(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).send({
+        success: false,
+        message: "Incorrect old password",
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password in the database
+    user.password = hashedPassword;
+    await user.save();
+
     res.status(200).send({
       success: true,
-      message: "Password Reset Successfully",
+      message: "Password changed successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error changing password:", error);
     res.status(500).send({
       success: false,
-      message: "An Error Occured!",
+      message: "Error changing password",
+      error,
     });
+  }
+};
+
+//FORGOT PASSWORD FUCTIONALITY
+//send otp to reset password
+export const sendOtpForResetController = async (req, res) => {
+  const { email } = req.body;
+  try {
+    // Check if the user exists
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000); // Generate a random OTP
+
+    // Send OTP to the user's email
+    await sendOtpToEmail(email, otp);
+
+    // Store OTP temporarily in memory (you can use Redis for better security)
+    global.otpCache = global.otpCache || {};
+    global.otpCache[email] = otp;
+
+    res.send({ success: true, message: "OTP sent for password reset!" });
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    res.status(500).send({ success: false, message: "Failed to send OTP." });
+  }
+};
+
+//verify otp to reset password
+export const verifyOtpForResetController = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    if (global.otpCache[email] === parseInt(otp)) {
+      return res.send({ success: true, message: "OTP verified successfully!" });
+    } else {
+      return res.status(400).send({ success: false, message: "Invalid OTP." });
+    }
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    res.status(500).send({ success: false, message: "Error verifying OTP." });
+  }
+};
+
+//reset password after otp verification
+export const resetPasswordController = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    // Validate input
+    if (!email || !otp || !newPassword) {
+      return res.status(400).send({
+        success: false,
+        message: "Email, OTP, and new password are required.",
+      });
+    }
+
+    // Check OTP
+    if (!global.otpCache || global.otpCache[email] !== parseInt(otp)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid or expired OTP.",
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password in database
+    await userModel.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    // Clear OTP cache after successful password reset
+    delete global.otpCache[email];
+
+    res.status(200).send({
+      success: true,
+      message: "Password reset successful!",
+    });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res
+      .status(500)
+      .send({ success: false, message: "Error resetting password." });
   }
 };
 
@@ -226,22 +325,17 @@ export const getUsersController = async (req, res) => {
 //update profile
 export const updateProfileController = async (req, res) => {
   try {
-    const { name, email, password, address, phone } = req.body;
+    const { name, address, phone, district, country } = req.body;
     const user = await userModel.findById(req.user._id);
-    //password
-    if (password && password.length < 6) {
-      return res.json({
-        error: "Password is required and must be at least 6 characters",
-      });
-    }
-    const hashedPassword = password ? await hashPassword(password) : undefined;
+
     const updatedUser = await userModel.findByIdAndUpdate(
       req.user._id,
       {
         name: name || user.name,
-        password: hashedPassword || user.password,
         address: address || user.address,
         phone: phone || user.phone,
+        district: district || user.district,
+        country: country || user.country,
       },
       { new: true }
     );
@@ -291,6 +385,22 @@ export const getAllOrdersController = async (req, res) => {
     res.status(400).send({
       success: false,
       message: "error in getting orders",
+      error,
+    });
+  }
+};
+
+//get single order
+export const getSingleOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await orderModel.findById(id).populate("buyer");
+    res.json(order);
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "error in getting order",
       error,
     });
   }

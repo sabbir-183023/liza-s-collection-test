@@ -3,7 +3,6 @@ import {
   registerController,
   loginController,
   testController,
-  forgotPasswordController,
   getUsersController,
   updateProfileController,
   getOrdersController,
@@ -14,6 +13,11 @@ import {
   getWishlist,
   removeFromWishlist,
   addToWishlist,
+  getSingleOrder,
+  changePasswordController,
+  sendOtpForResetController,
+  verifyOtpForResetController,
+  resetPasswordController,
 } from "../controllers/authController.js";
 import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
 
@@ -34,8 +38,14 @@ router.post("/verify-otp", verifyOtpController);
 //login
 router.post("/login", loginController);
 
-//Forgot password
-router.post("/forgot-password", forgotPasswordController);
+// Change Password Route (Protected)
+router.post("/change-password", requireSignIn, changePasswordController);
+
+
+// Forgot Password Routes
+router.post("/send-otp-reset", sendOtpForResetController);
+router.post("/verify-otp-reset", verifyOtpForResetController);
+router.post("/reset-password", resetPasswordController);
 
 //test routes
 router.get("/test", requireSignIn, isAdmin, testController);
@@ -60,6 +70,9 @@ router.get("/orders", requireSignIn, getOrdersController);
 
 //All orders
 router.get("/all-orders", requireSignIn, isAdmin, getAllOrdersController);
+
+//Get Single Order
+router.get("/order/:id", requireSignIn, getSingleOrder);
 
 //All orders
 router.put(

@@ -109,7 +109,7 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
             <p class="order-id">Order ID: #LC${orderId}</p>
             <p>Status: <span class="status">${status}</span></p>
             <p>Feel free to give the product a review so that others can purchase easily</p>
-            <a href="https://lizfashions.freewebhostmost.com/"><button>Click here review</button></a>
+            <a href="https://lizfashions.freewebhostmost.com/dashboard/user/orders/${orderId}"><button>Click here review</button></a>
           </div>
           <p>Thank you for shopping with us! If you have any questions, feel free to contact us.</p>
           <div class="footer">
@@ -124,7 +124,7 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
     const mailOptions = {
       from: process.env.EMAIL_USER, // Sender's email
       to: email, // Recipient's email
-      subject: `Update on your order #LC${orderId} at LiZ Fashions`,
+      subject: `Delivery of Order #LF${orderId} at LiZ Fashions`,
       html: emailContent, // HTML email content
     };
     // Send the email

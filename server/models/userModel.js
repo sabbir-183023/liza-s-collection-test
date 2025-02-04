@@ -22,11 +22,19 @@ const userSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      required: true,
+      default: '',
+    },
+    district: {
+      type: String,
+      default: '',
+    },
+    country: {
+      type: String,
+      default: 'Bangladesh',
     },
     answer: {
       type: {},
-      required: true,
+      default: '',
     },
     role: {
       type: Number,
