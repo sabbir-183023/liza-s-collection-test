@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Function to send OTP via email
+// Function to send Register OTP via email
 export const sendOtpToEmail = async (email, otp) => {
   try {
     // Set up the transporter for Gmail or your preferred email service
@@ -15,16 +15,80 @@ export const sendOtpToEmail = async (email, otp) => {
       },
     });
 
+    // HTML content for the email
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; color: #444; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+        <h2 style="text-align: center; color: #333;">Welcome to LiZ Fashions!</h2>
+        <p style="font-size: 16px; text-align: center;">Thank you for registering with us. Please use the following OTP to complete your registration:</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <span style="font-size: 28px; font-weight: bold; color: #007bff;">${otp}</span>
+        </div>
+        <p style="font-size: 14px; text-align: center; color: #666;">
+          This OTP is valid for 10 minutes. If you did not request this, please ignore this email.
+        </p>
+        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 30px;">
+          &copy; ${new Date().getFullYear()} LiZ Fashions. All rights reserved.
+        </p>
+      </div>
+    `;
+
     // Mail options
     const mailOptions = {
-      from: process.env.EMAIL_USER, // Sender's email
+      from: `"LiZ Fashions" <${process.env.EMAIL_USER}>`, // Sender's name and email
       to: email, // Recipient's email
-      subject: "Registration at LiZ Fashions",
-      text: ` Your OTP for registering with us is: ${otp}`, // The OTP content of the email
+      subject: "Your OTP for Registration - LiZ Fashions",
+      html: htmlContent, // The OTP content in HTML format
     };
 
     // Send the email
     await transporter.sendMail(mailOptions);
+    console.log("OTP email sent successfully to:", email);
+  } catch (error) {
+    console.error("Error sending OTP email:", error);
+    throw new Error("Failed to send OTP");
+  }
+};
+
+// Function to send Register OTP via email
+export const sendForgotOtpToEmail = async (email, otp) => {
+  try {
+    // Set up the transporter for Gmail or your preferred email service
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // Your email address
+        pass: process.env.EMAIL_PASS, // Your email password or app-specific password
+      },
+    });
+
+    // HTML content for the email
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; color: #444; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; padding: 20px;">
+        <h2 style="text-align: center; color: #333;">Hello From LiZ Fashions!</h2>
+        <p style="font-size: 16px; text-align: center;">Forgot your password? No worries! We've got your back. Please use the following OTP to reset your password:</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <span style="font-size: 28px; font-weight: bold; color: #007bff;">${otp}</span>
+        </div>
+        <p style="font-size: 14px; text-align: center; color: #666;">
+          This OTP is valid for 10 minutes. If you did not request this, please ignore this email.
+        </p>
+        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 30px;">
+          &copy; ${new Date().getFullYear()} LiZ Fashions. All rights reserved.
+        </p>
+      </div>
+    `;
+
+    // Mail options
+    const mailOptions = {
+      from: `"LiZ Fashions" <${process.env.EMAIL_USER}>`, // Sender's name and email
+      to: email, // Recipient's email
+      subject: "OTP for Password Reset - LiZ Fashions",
+      html: htmlContent, // The OTP content in HTML format
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
+    console.log("OTP email sent successfully to:", email);
   } catch (error) {
     console.error("Error sending OTP email:", error);
     throw new Error("Failed to send OTP");
@@ -189,6 +253,15 @@ export const sendOrderCorfirmationToEmail = async (email, name, orderId) => {
             color: #4CAF50;
             font-weight: bold;
           }
+          .tracking-btn{
+            text-decoration:none;
+            color:white;
+          }
+          .tracking-btn button{
+            background:rgb(0, 106, 4);
+            color:white;
+            padding:8px;
+          }
           .footer {
             text-align: center;
             font-size: 12px;
@@ -206,7 +279,7 @@ export const sendOrderCorfirmationToEmail = async (email, name, orderId) => {
             <p class="order-id"></p>
             <p><span class="status">Order ID: #LF${orderId}</span></p>
             <p><span class="status">Track Your Order Here 👇.</span></p>
-            <p>https://lizfashions.freewebhostmost.com/dashboard/user/orders/${orderId}</p>
+            <a class="tracking-btn" href="https://lizfashions.freewebhostmost.com/dashboard/user/orders/${orderId}"><button>Click Here To Track</button></a>
             <p><span class="status">We are processing your order.</span></p>
           </div>
           <p>Thank you for shopping with us! If you have any questions, feel free to contact us.</p>

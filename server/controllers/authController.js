@@ -231,7 +231,7 @@ export const sendOtpForResetController = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000); // Generate a random OTP
 
     // Send OTP to the user's email
-    await sendOtpToEmail(email, otp);
+    await sendForgotOtpToEmail(email, otp);
 
     // Store OTP temporarily in memory (you can use Redis for better security)
     global.otpCache = global.otpCache || {};
