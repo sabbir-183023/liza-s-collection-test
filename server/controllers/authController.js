@@ -1,5 +1,9 @@
 import { comparePassword, hashPassword } from "../helpers/authHelper.js";
-import { sendOtpToEmail, sendStatusToEmail } from "../helpers/emailUtils.js"; // Import the utility function
+import {
+  sendOtpToEmail,
+  sendStatusToEmail,
+  sendForgotOtpToEmail,
+} from "../helpers/emailUtils.js"; // Import the utility function
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
 import productModel from "../models/productModel.js";
