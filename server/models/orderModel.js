@@ -4,6 +4,10 @@ const orderSchema = new mongoose.Schema(
   {
     products: [],
     payment: {},
+    lastNumber:{
+      type: String,
+      default: "",
+    },
     buyer: {
       type: mongoose.ObjectId,
       ref: "users",

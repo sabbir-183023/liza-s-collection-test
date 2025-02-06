@@ -19,7 +19,8 @@ import {
   getPhotosController,
   uploadSinglePhotoController,
   removePhotoController,
-  getProductsWithOriginalPrice
+  getProductsWithOriginalPrice,
+  onlinePaymentController,
 } from "../controllers/productController.js";
 import multer from "multer";
 import { isAdmin, requireSignIn } from "../middlewares/authMiddleware.js";
@@ -50,15 +51,10 @@ router.post(
 );
 
 //edit product
-router.put(
-  "/edit-product/:id",
-  requireSignIn,
-  isAdmin,
-  editProductController
-);
+router.put("/edit-product/:id", requireSignIn, isAdmin, editProductController);
 
 //getPhotos
-router.get("/get-photos/:id", requireSignIn, isAdmin, getPhotosController)
+router.get("/get-photos/:id", requireSignIn, isAdmin, getPhotosController);
 
 // Single photo upload and save to product route
 router.post(
@@ -70,7 +66,12 @@ router.post(
 );
 
 // delete a photo
-router.delete("/remove-photo/:productId",requireSignIn,isAdmin, removePhotoController)
+router.delete(
+  "/remove-photo/:productId",
+  requireSignIn,
+  isAdmin,
+  removePhotoController
+);
 
 //get products
 router.get("/get-product", getProductController);
@@ -111,6 +112,9 @@ router.post("/braintree/payment", requireSignIn, braintreePaymentController);
 
 //COD Order
 router.post("/cod", requireSignIn, codController);
+
+//Online Payment Order
+router.post("/online-payment", requireSignIn, onlinePaymentController);
 
 //Most Sold Products
 router.get("/most-sold-products", mostSoldProductsController);

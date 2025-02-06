@@ -136,7 +136,7 @@ export const sendStatusToEmail = async (email, orderId, name, status) => {
 };
 
 // Function to Confirm Order via email
-export const sendOrderCorfirmationToEmail = async (email, name) => {
+export const sendOrderCorfirmationToEmail = async (email, name, orderId) => {
   try {
     // Set up the transporter for Gmail or your preferred email service
     const transporter = nodemailer.createTransport({
@@ -204,6 +204,9 @@ export const sendOrderCorfirmationToEmail = async (email, name) => {
           <p>We wanted to thank you for ordering at LiZ Fashions. We have received your order.</p>
           <div class="order-details">
             <p class="order-id"></p>
+            <p><span class="status">Order ID: #LF${orderId}</span></p>
+            <p><span class="status">Track Your Order Here 👇.</span></p>
+            <p>https://lizfashions.freewebhostmost.com/dashboard/user/orders/${orderId}</p>
             <p><span class="status">We are processing your order.</span></p>
           </div>
           <p>Thank you for shopping with us! If you have any questions, feel free to contact us.</p>
