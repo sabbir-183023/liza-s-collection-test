@@ -8,9 +8,11 @@ import categoryRoutes from "./routes/categoryRoute.js";
 import productRoutes from "./routes/productRoute.js";
 import homepageSlideRoutes from "./routes/homePageSlideRoute.js";
 import reviewRoute from "./routes/reviewRoute.js";
+import accountingRoute from "./routes/AccountingRoute.js";
+import blogRoute from "./routes/blogRoute.js";
+import inventoryRoute from "./routes/inventoryRoute.js";
 import cors from "cors";
 import bodyParser from "body-parser";
-
 
 // config env
 dotenv.config();
@@ -33,6 +35,9 @@ app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/slide", homepageSlideRoutes);
 app.use("/api/v1/review", reviewRoute);
+app.use("/api/v1/accounting", accountingRoute);
+app.use("/api/v1/blog", blogRoute);
+app.use("/api/v1/inventory", inventoryRoute);
 
 //rest api
 app.get("/", (req, res) => {

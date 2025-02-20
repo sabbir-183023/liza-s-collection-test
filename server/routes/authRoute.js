@@ -18,6 +18,7 @@ import {
   sendOtpForResetController,
   verifyOtpForResetController,
   resetPasswordController,
+  contactMessageController,
 } from "../controllers/authController.js";
 import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
 
@@ -40,7 +41,6 @@ router.post("/login", loginController);
 
 // Change Password Route (Protected)
 router.post("/change-password", requireSignIn, changePasswordController);
-
 
 // Forgot Password Routes
 router.post("/send-otp-reset", sendOtpForResetController);
@@ -90,5 +90,8 @@ router.delete("/:userId/wishlist", removeFromWishlist);
 
 // Get wishlist
 router.get("/:userId/wishlist", getWishlist);
+
+//send contact message
+router.post("/contact-message", contactMessageController);
 
 export default router;

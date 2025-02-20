@@ -3,9 +3,12 @@ import {
   sendOtpToEmail,
   sendStatusToEmail,
   sendForgotOtpToEmail,
+  sendContactEmail,
 } from "../helpers/emailUtils.js"; // Import the utility function
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
+import TransactionModel from "../models/transactionModel.js";
+import Newsletter from "../models/newsletterModel.js";
 import productModel from "../models/productModel.js";
 import JWT from "jsonwebtoken";
 
@@ -92,6 +95,10 @@ export const registerController = async (req, res) => {
       phone,
       password: hashedPassword,
     }).save();
+
+    // Save new subscriber
+    const newSubscriber = new Newsletter({ email });
+    await newSubscriber.save();
 
     // Clear OTP cache for the user after successful registration
     delete global.otpCache[email];
@@ -423,10 +430,12 @@ export const orderStatusController = async (req, res) => {
       { status },
       { new: true }
     );
-    console.log(status);
     //send order status email
     if (status === "Delivered") {
       await sendStatusToEmail(email, orderId, name, status);
+    }
+    if (status === "Cancelled") {
+      await TransactionModel.findOneAndDelete({ orderId });
     }
     res.json(orders);
   } catch (error) {
@@ -520,6 +529,25 @@ export const getWishlist = async (req, res) => {
     return res.status(500).send({
       success: false,
       message: "Server error",
+      error,
+    });
+  }
+};
+
+//send contact message
+export const contactMessageController = async (req, res) => {
+  try {
+    const { name, email, phone, subject, message } = req.body;
+    await sendContactEmail(name, email, phone, subject, message);
+    res.status(200).send({
+      success: true,
+      message: "Message Submitted Successfully!",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      success: false,
+      message: "server error",
       error,
     });
   }

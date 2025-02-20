@@ -8,7 +8,10 @@ import braintree from "braintree";
 import fs from "fs";
 import { sendOrderCorfirmationToEmail } from "../helpers/emailUtils.js";
 import userModel from "../models/userModel.js";
+import TransactionModel from "../models/transactionModel.js";
+import inventoryModel from "../models/inventoryModel.js";
 import Review from "../models/reviewModel.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -38,6 +41,7 @@ export const createProductController = async (req, res) => {
       sellingPrice,
       originalPrice,
       category,
+      inventory,
       quantity,
       colors,
     } = req.body;
@@ -52,6 +56,8 @@ export const createProductController = async (req, res) => {
         return res.status(500).send({ error: "Selling Price is Required" });
       case !category:
         return res.status(500).send({ error: "Category is Required" });
+      case !inventory:
+        return res.status(500).send({ error: "Inventory is Required" });
       case !quantity:
         return res.status(500).send({ error: "Quantity is Required" });
       case !colors:
@@ -87,6 +93,7 @@ export const createProductController = async (req, res) => {
       sellingPrice,
       originalPrice: originalPrice || "",
       category,
+      inventory,
       quantity,
       photos,
       colors,
@@ -680,7 +687,7 @@ export const codController = async (req, res) => {
     const { cart } = req.body;
     let total = 0;
     cart.map((item) => {
-      total = total + item.price * item.amount;
+      total = total + item.sellingPrice * item.amount;
     });
 
     const order = new orderModel({
@@ -689,11 +696,20 @@ export const codController = async (req, res) => {
       buyer: req.user._id,
     }).save();
 
-    // Update product quantities
+    // Update product quantities in product model
     for (const item of cart) {
       await productModel.findByIdAndUpdate(
         item._id,
         { $inc: { quantity: -item.amount } }, // Reduce quantity by the purchased amount
+        { new: true }
+      );
+    }
+
+    // Update product quantities in inventory model
+    for (const item of cart) {
+      await inventoryModel.findByIdAndUpdate(
+        item.inventory,
+        { $inc: { currentQty: -item.amount } }, // Reduce quantity by the purchased amount
         { new: true }
       );
     }
@@ -704,6 +720,15 @@ export const codController = async (req, res) => {
     const name = user.name;
     const email = user.email;
     await sendOrderCorfirmationToEmail(email, name, orderId);
+
+    // Create a new transaction entry
+    const transaction = await new TransactionModel({
+      debitAccounts: [new mongoose.Types.ObjectId("67b181b7e22f8c747e10030b")], // Bank
+      creditAccounts: [new mongoose.Types.ObjectId("67b1867baf3a92b604657119")], // Sales
+      amount: total,
+      date: (await order).createdAt, // Order date
+      orderId: (await order)._id, // Reference to the order
+    }).save();
     res.status(200).send({
       success: true,
       message: "Cash On Delivery Order Successful",
@@ -744,12 +769,30 @@ export const onlinePaymentController = async (req, res) => {
       );
     }
 
+    // Update product quantities in inventory model
+    for (const item of cart) {
+      await inventoryModel.findByIdAndUpdate(
+        item.inventory,
+        { $inc: { currentQty: -item.amount } }, // Reduce quantity by the purchased amount
+        { new: true }
+      );
+    }
+
     const buyerId = req.user._id;
     const orderId = (await order)._id;
     const user = await userModel.findById(buyerId);
     const name = user.name;
     const email = user.email;
     await sendOrderCorfirmationToEmail(email, name, orderId);
+
+    // Create a new transaction entry
+    const transaction = await new transactionModel({
+      debitAccounts: [new mongoose.Types.ObjectId("67b181b7e22f8c747e10030b")], // Bank
+      creditAccounts: [new mongoose.Types.ObjectId("67b1867baf3a92b604657119")], // Sales
+      amount: total,
+      date: (await order).createdAt, // Order date
+      orderId: (await order)._id, // Reference to the order
+    });
     res.status(200).send({
       success: true,
       message: "Cash On Delivery Order Successful",

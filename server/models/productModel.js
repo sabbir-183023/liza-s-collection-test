@@ -27,6 +27,11 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+    inventory: {
+      type: mongoose.ObjectId,
+      ref: "Inventory",
+      required: true,
+    },
     quantity: {
       type: Number,
       required: true,
