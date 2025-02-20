@@ -9,7 +9,7 @@ import { requireSignIn, isAdmin } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 // Route to fetch all contents
-router.get("/", requireSignIn, isAdmin, getContents);
+router.get("/", getContents);
 
 // Route to add new content
 router.post("/", requireSignIn, isAdmin, addContent);
